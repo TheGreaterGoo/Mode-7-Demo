@@ -1,4 +1,7 @@
 import src.projector
 
-with open("projecter.py") as f:
-    exec(f.read())
+try:
+    with open("projector.py") as f:
+        exec(f.read())
+except Exception as N:
+    print("Terminated - " + str(N))
