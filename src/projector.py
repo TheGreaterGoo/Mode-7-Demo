@@ -15,7 +15,8 @@ def game():
 
     mod = hres / 60 # scaling factor (60 degree FOV)
     posx, posy, rot = 0, 0, 0 # player
-    posz, vz, az = 1, 0.01, 0.001
+    posz, vz, az = 1, -0.01, 0.0004
+    going_up = False
 
     frame = numpy.random.uniform(0, 1, (hres, half_vres * 2, 3))
     bg = pygame.image.load("assets/mountains.png")
@@ -40,10 +41,19 @@ def game():
         surface = pygame.transform.scale(surface, (800, 600))
         w.blit(surface, (0, 0))
 
-        pygame.display.update()
-        posx, posy, rot, posz = movement(posx, posy, rot, pygame.key.get_pressed(), clock.tick(), posz, vz, az)
+        going_up = not is_touching_ground(posz, going_up)
+        if (vz > 0): going_up = False
 
-def movement(posx, posy, rot, keys, et, posz, vz, az):
+        pygame.display.update()
+        posx, posy, rot, vz, going_up = movement(posx, posy, posz, rot, pygame.key.get_pressed(), clock.tick(), vz, going_up)
+
+        if not is_touching_ground(posz, going_up):
+            vz += az
+            posz += vz
+        else:
+            vz = 0
+
+def movement(posx, posy, posz, rot, keys, et, vz, going_up):
     if keys[pygame.K_LEFT]:
         rot -= 0.002 * et
 
@@ -58,21 +68,15 @@ def movement(posx, posy, rot, keys, et, posz, vz, az):
         posx -= numpy.cos(rot) * 0.002 * et
         posy -= numpy.sin(rot) * 0.002 * et
 
-    if keys[pygame.K_SPACE]:
-        posz, vz, az = jump(posz, vz, az)
+    if keys[pygame.K_SPACE] and is_touching_ground(posz, going_up):
+        going_up = True
+        vz = -0.02
 
-    return posx, posy, rot, posz
+    return posx, posy, rot, vz, going_up
 
-def jump(posz, vz, az):
-    if posz > 0.5:
-        posz -= vz
-        vz -= az
-    else:
-        vz *= -1
-        az *= -1
-    return posz, vz, az
-
-def is_touching_ground():
+def is_touching_ground(posz, going_up):
+    if going_up: return False
+    if posz >= 1: return True
     return False
 
 @njit()
