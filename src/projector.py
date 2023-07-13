@@ -23,7 +23,7 @@ def game():
     bg = pygame.surfarray.array3d(pygame.transform.scale(bg, (360, half_vres * 2)))
 
     floor_assets = ["assets/grass.png", "assets/rocks.png", "assets/dirt.png"]
-    floor = pygame.surfarray.array3d(pygame.image.load(floor_assets[2]))
+    floor = pygame.surfarray.array3d(pygame.image.load(floor_assets[0]))
 
     drawing = True
     while drawing:
@@ -45,7 +45,7 @@ def game():
         if (vz > 0): going_up = False
 
         pygame.display.update()
-        posx, posy, rot, vz, going_up = movement(posx, posy, posz, rot, pygame.key.get_pressed(), clock.tick(), vz, going_up)
+        posx, posy, rot, vz, az, going_up = movement(posx, posy, posz, rot, pygame.key.get_pressed(), clock.tick(), vz, az, going_up)
 
         if not is_touching_ground(posz, going_up):
             vz += az
@@ -53,7 +53,7 @@ def game():
         else:
             vz = 0
 
-def movement(posx, posy, posz, rot, keys, et, vz, going_up):
+def movement(posx, posy, posz, rot, keys, et, vz, az, going_up):
     if keys[pygame.K_LEFT]:
         rot -= 0.002 * et
 
@@ -72,7 +72,7 @@ def movement(posx, posy, posz, rot, keys, et, vz, going_up):
         going_up = True
         vz = -0.02
 
-    return posx, posy, rot, vz, going_up
+    return posx, posy, rot, vz, az, going_up
 
 def is_touching_ground(posz, going_up):
     if going_up: return False
