@@ -9,16 +9,16 @@ def game():
     w = pygame.display.set_mode([800, 600])
     clock = pygame.time.Clock()
 
-    # define floor specifications
-    hres = 120
-    half_vres = 100
+    # define resolution specifications
+    hres = 120 # horizontal resolution in terms of columns
+    half_vres = 100 # half of the vertical resolution in terms of rows
 
     mod = hres / 60 # scaling factor (60 degree FOV)
-    posx, posy, rot = 0, 0, 0 # player
-    posz, vz, az = 1, -0.01, 0.0004
+    posx, posy, rot = 0, 0, 0 # player and camera movement
+    posz, vz, az = 1, -0.01, 0.0004 # jumping movement
     going_up = False
 
-    frame = numpy.random.uniform(0, 1, (hres, half_vres * 2, 3))
+    frame = numpy.random.uniform(0, 1, (hres, half_vres * 2, 3)) # 3D array management of on-screen pixels
     bg = pygame.image.load("assets/mountains.png")
     bg = pygame.surfarray.array3d(pygame.transform.scale(bg, (360, half_vres * 2)))
 
@@ -34,18 +34,22 @@ def game():
             if event.type == pygame.QUIT:
                 drawing = False
 
+        # Assigning the pixel locations for each new frame
         frame = new_frame(posx, posy, rot, frame, bg, floor, hres, half_vres, mod, posz)
 
-
+        # Drawing the frame
         surface = pygame.surfarray.make_surface(frame * 255)
         surface = pygame.transform.scale(surface, (800, 600))
         w.blit(surface, (0, 0))
+        pygame.display.update()
 
+        # Updating positions
+        posx, posy, rot, vz, az, going_up = movement(posx, posy, posz, rot, pygame.key.get_pressed(), clock.tick(), vz,
+                                                     az, going_up)
+
+        # Jump logic
         going_up = not is_touching_ground(posz, going_up)
         if (vz > 0): going_up = False
-
-        pygame.display.update()
-        posx, posy, rot, vz, az, going_up = movement(posx, posy, posz, rot, pygame.key.get_pressed(), clock.tick(), vz, az, going_up)
 
         if not is_touching_ground(posz, going_up):
             vz += az
@@ -84,6 +88,7 @@ def new_frame(posx, posy, rot, frame, bg, floor, hres, half_vres, mod, z):
     for i in range(hres):  # iterating through the columns in the screen
         # rot_i is the direction of each column part of the fov in the frame
         rot_i = rot + numpy.deg2rad(i / mod - 30)  # fov represented by rot +/- 30 degrees
+        # Getting the sin and cos values of the rot_i is used to represent perspective warping
         sin, cos, cos2 = numpy.sin(rot_i), numpy.cos(rot_i), numpy.cos(numpy.deg2rad(i / mod - 30))
 
         # Extracting and setting an entire column of the background to the frame
